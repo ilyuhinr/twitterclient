@@ -1,5 +1,7 @@
 package com.example.twitterclient.activity;
 
+import java.security.SecureRandom;
+
 import org.scribe.builder.ServiceBuilder;
 import org.scribe.model.Token;
 import org.scribe.model.Verifier;
@@ -9,6 +11,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.webkit.WebView;
@@ -27,6 +30,7 @@ import com.example.twitterclient.utils.VerifyTokenCallback;
 
 public class MainActivity extends SherlockActivity implements
 		VerifyTokenCallback {
+	private static int NONCE_LENGTH = 32;
 	WebView mTwitterWebView;
 	Button mButtonIsConnect;
 
@@ -134,6 +138,7 @@ public class MainActivity extends SherlockActivity implements
 									String verifier = uri
 											.getQueryParameter("oauth_verifier");
 									Verifier v = new Verifier(verifier);
+									TwitterConstants.VERIFER = v.getValue();
 									Token accessToken = s.getAccessToken(
 											requestToken, v);
 									TwitterConstants.ACCESS_TOKEN = accessToken
@@ -163,12 +168,25 @@ public class MainActivity extends SherlockActivity implements
 	@Override
 	public void isVerify(boolean verify) {
 		if (verify) {
-			startActivity(new Intent(MainActivity.this, TwitterMessageActivity.class));
+			startActivity(new Intent(MainActivity.this,
+					TwitterMessageActivity.class));
 		} else {
 			mTwitterWebView.setVisibility(View.GONE);
 			mButtonIsConnect.setVisibility(View.GONE);
 			buildAuth();
 		}
 
+	}
+
+	private String generateNonce() {
+		try {
+			byte[] nonceByteArray = new byte[NONCE_LENGTH];
+			String nonceString = Base64.encodeToString(nonceByteArray,
+					Base64.NO_WRAP);
+			return nonceString.replaceAll("[^\\p{L}\\p{Nd}]+", "");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

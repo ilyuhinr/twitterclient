@@ -1,5 +1,14 @@
 package com.example.twitterclient.activity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.NameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.scribe.model.Verb;
+
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -13,16 +22,27 @@ import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Window;
+import com.android.volley.Request.Method;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.Response.ErrorListener;
+import com.android.volley.Response.Listener;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.twitterclient.R;
 import com.example.twitterclient.fragments.FriendsFragment;
 import com.example.twitterclient.fragments.MessageFragment;
+import com.example.twitterclient.utils.TokenRequest;
+import com.example.twitterclient.utils.TweetsRequest;
 import com.example.twitterclient.utils.TwitterConstants;
+import com.example.twitterclient.utils.VolleyOAuthRequest;
 import com.example.twitterclient.utils.VolleyUtils;
 import com.viewpagerindicator.TabPageIndicator;
 
-public class TwitterMessageActivity extends SherlockFragmentActivity implements
-		FriendsFragment.CallerActivity {
+public class TwitterMessageActivity<T> extends SherlockFragmentActivity
+		implements FriendsFragment.CallerActivity {
 	public static ImageLoader mImageLoader;
 	ListView mMessageListView;
 	private static final String[] CONTENT = new String[] { "Followers",
@@ -30,6 +50,9 @@ public class TwitterMessageActivity extends SherlockFragmentActivity implements
 	FragmentPagerAdapter mTwitterPagerAdapter;
 	CallbackFragmentManager mCallbackFragmentManager = null;
 	ViewPager mViewPager;
+	public static RequestQueue mRequestQueue;
+	private TweetJsonListener mDownListener = new TweetJsonListener();
+	private static final String TOKEN_URL = "https://api.twitter.com/oauth2/token";
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -65,6 +88,59 @@ public class TwitterMessageActivity extends SherlockFragmentActivity implements
 			public void onPageScrollStateChanged(int arg0) {
 			}
 		});
+
+		// params.add(new BasicNameValuePair("q", query));
+		mRequestQueue = Volley.newRequestQueue(this);
+
+		StringRequest request = new TokenRequest(Method.POST, TOKEN_URL,
+				new Listener<String>() {
+					@Override
+					public void onResponse(String response) {
+						try {
+							JSONObject object = new JSONObject(response);
+
+							TwitterConstants.ACCESS_TOKEN_VOLLEY = object
+									.optString("access_token");
+							List<NameValuePair> params = new ArrayList<NameValuePair>();
+							mRequestQueue.add(new TweetsRequest(
+									TwitterConstants.FOLLOWERS_GET,
+									mDownListener, new ErrorListener() {
+										@Override
+										public void onErrorResponse(
+												VolleyError error) {
+
+											error.printStackTrace();
+										}
+									}, params));
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+				}, new ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError error) {
+						error.printStackTrace();
+					}
+				});
+		mRequestQueue.add(request);
+
+	}
+
+	class TweetJsonListener implements Listener<JSONObject> {
+
+		@Override
+		public void onResponse(JSONObject response) {
+			JSONObject jsonObject = null;
+			JSONArray tweets = response.optJSONArray("statuses");
+			int count = tweets != null ? tweets.length() : 0;
+			for (int i = 0; i < count; i++) {
+				jsonObject = tweets.optJSONObject(i);
+				if (jsonObject != null) {
+
+				}
+			}
+		}
+
 	}
 
 	@SuppressLint("DefaultLocale")
