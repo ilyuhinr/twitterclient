@@ -7,7 +7,6 @@ import org.apache.http.NameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.scribe.model.Verb;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -24,7 +23,6 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Window;
 import com.android.volley.Request.Method;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
@@ -35,14 +33,13 @@ import com.example.twitterclient.R;
 import com.example.twitterclient.fragments.FriendsFragment;
 import com.example.twitterclient.fragments.MessageFragment;
 import com.example.twitterclient.utils.TokenRequest;
-import com.example.twitterclient.utils.TweetsRequest;
 import com.example.twitterclient.utils.TwitterConstants;
 import com.example.twitterclient.utils.VolleyOAuthRequest;
 import com.example.twitterclient.utils.VolleyUtils;
 import com.viewpagerindicator.TabPageIndicator;
 
-public class TwitterMessageActivity<T> extends SherlockFragmentActivity
-		implements FriendsFragment.CallerActivity {
+public class TwitterMessageActivity extends SherlockFragmentActivity implements
+		FriendsFragment.CallerActivity {
 	public static ImageLoader mImageLoader;
 	ListView mMessageListView;
 	private static final String[] CONTENT = new String[] { "Followers",
@@ -102,16 +99,22 @@ public class TwitterMessageActivity<T> extends SherlockFragmentActivity
 							TwitterConstants.ACCESS_TOKEN_VOLLEY = object
 									.optString("access_token");
 							List<NameValuePair> params = new ArrayList<NameValuePair>();
-							mRequestQueue.add(new TweetsRequest(
-									TwitterConstants.FOLLOWERS_GET,
-									mDownListener, new ErrorListener() {
-										@Override
-										public void onErrorResponse(
-												VolleyError error) {
+							/*
+							 * params.add(new BasicNameValuePair("status",
+							 * String .valueOf("Hello World!!!")));
+							 */
+							mRequestQueue
+									.add(new VolleyOAuthRequest(
+											Method.GET,
+											"https://api.twitter.com/1.1/statuses/update.json",
+											mDownListener, new ErrorListener() {
+												@Override
+												public void onErrorResponse(
+														VolleyError error) {
 
-											error.printStackTrace();
-										}
-									}, params));
+													error.printStackTrace();
+												}
+											}, params));
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}
@@ -126,15 +129,19 @@ public class TwitterMessageActivity<T> extends SherlockFragmentActivity
 
 	}
 
-	class TweetJsonListener implements Listener<JSONObject> {
+
+	public class TweetJsonListener implements Listener<JSONArray> {// Listener<JSONObject>
 
 		@Override
-		public void onResponse(JSONObject response) {
+		public void onResponse(JSONArray response) {
 			JSONObject jsonObject = null;
-			JSONArray tweets = response.optJSONArray("statuses");
-			int count = tweets != null ? tweets.length() : 0;
+			int count = response != null ? response.length() : 0;
 			for (int i = 0; i < count; i++) {
-				jsonObject = tweets.optJSONObject(i);
+				try {
+					System.out.println(response.get(i).toString());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 				if (jsonObject != null) {
 
 				}
@@ -221,4 +228,5 @@ public class TwitterMessageActivity<T> extends SherlockFragmentActivity
 		alertDialog.show();
 
 	}
-}
+
+	}

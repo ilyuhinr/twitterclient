@@ -9,6 +9,7 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
 public final class TokenRequest extends StringRequest {
 	public TokenRequest(int method, String url, Listener<String> listener,

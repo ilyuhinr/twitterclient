@@ -1,6 +1,14 @@
 package com.example.twitterclient.activity;
 
-import java.security.SecureRandom;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.scribe.builder.ServiceBuilder;
 import org.scribe.model.Token;
@@ -23,6 +31,7 @@ import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Window;
 import com.example.twitterclient.R;
 import com.example.twitterclient.utils.NetworkUtils;
+import com.example.twitterclient.utils.OAuth;
 import com.example.twitterclient.utils.TwitterApi;
 import com.example.twitterclient.utils.TwitterConstants;
 import com.example.twitterclient.utils.VerifyOAuthToken;
@@ -30,9 +39,9 @@ import com.example.twitterclient.utils.VerifyTokenCallback;
 
 public class MainActivity extends SherlockActivity implements
 		VerifyTokenCallback {
-	private static int NONCE_LENGTH = 32;
 	WebView mTwitterWebView;
 	Button mButtonIsConnect;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -178,15 +187,6 @@ public class MainActivity extends SherlockActivity implements
 
 	}
 
-	private String generateNonce() {
-		try {
-			byte[] nonceByteArray = new byte[NONCE_LENGTH];
-			String nonceString = Base64.encodeToString(nonceByteArray,
-					Base64.NO_WRAP);
-			return nonceString.replaceAll("[^\\p{L}\\p{Nd}]+", "");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+	
+
 }
