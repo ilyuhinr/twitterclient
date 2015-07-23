@@ -27,8 +27,7 @@ public class VolleyOAuthRequest extends JsonArrayRequest {
 	public VolleyOAuthRequest(int method, String path,
 			Listener<JSONArray> listener, Response.ErrorListener errorListener,
 			List<NameValuePair> par) {
-		super(method, TwitterConstants.DIRECT_MESSAGES_SENT_GET, listener,
-				errorListener);
+		super(method, TwitterConstants.FOLLOWERS_GET, listener, errorListener);
 		params = new HashMap<String, String>();
 		// params.put(par.get(0).getName(), par.get(0).getValue());
 		header_params = new HashMap<String, String>();
@@ -48,22 +47,24 @@ public class VolleyOAuthRequest extends JsonArrayRequest {
 
 	@Override
 	public String getUrl() {
-		if (oAuthRequest == null) {
-			buildOAuthRequest();
-			header_params = (HashMap<String, String>) oAuthRequest.getHeaders();
-			/*
-			 * for (Map.Entry<String, String> entry : oAuthRequest
-			 * .getOauthParameters().entrySet()) { addParameter(entry.getKey(),
-			 * entry.getValue()); }
-			 */
-		}
+		/*
+		 * if (oAuthRequest == null) { buildOAuthRequest(); header_params =
+		 * (HashMap<String, String>) oAuthRequest.getHeaders();
+		 * 
+		 * for (Map.Entry<String, String> entry : oAuthRequest
+		 * .getOauthParameters().entrySet()) { addParameter(entry.getKey(),
+		 * entry.getValue()); }
+		 * 
+		 * }
+		 */
 		return super.getUrl();// + getParameterString();
 	}
 
 	@Override
 	public Map<String, String> getHeaders() throws AuthFailureError {
 		Map<String, String> par = new HashMap<String, String>();
-		par.put("Authorization", TwitterConstants.getAuthHeader(super.getUrl()));
+		par.put("Authorization",
+				TwitterConstants.getAuthHeader(super.getUrl(), "GET"));
 		return par;
 	}
 

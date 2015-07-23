@@ -36,15 +36,10 @@ public class TwitterConstants {
 	private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
 	public static HashMap<String, String> HEADER_AUTH = null;
 
-	public static String getAuthHeader(String url) {
+	public static String getAuthHeader(String url, String mehtod) {
 		String request_base_url = url;
 		String oAuthConsumerKey = TwitterConstants.APIKEY;
-		String stringNonce = generateNonce()/*
-											 * String.valueOf(randInt(10000,
-											 * 99999)) +
-											 * String.valueOf(randInt(10000,
-											 * 99999))
-											 */;
+		String stringNonce = genNonce();
 		String oauth_signature_method = "HMAC-SHA1";
 		Long timeStamp = System.currentTimeMillis() / 1000;
 		String oauth_token = TwitterConstants.TOKEN.getToken();
@@ -74,7 +69,7 @@ public class TwitterConstants {
 		stringRequestParams = stringRequestParams.substring(0,
 				stringRequestParams.length() - 1);
 		String outputString = "";
-		outputString = "GET";
+		outputString = mehtod;
 		outputString = outputString + "&";
 		outputString = outputString + OAuth.percentEncode(request_base_url);
 		outputString = outputString + "&";
@@ -83,7 +78,8 @@ public class TwitterConstants {
 		String signing_key = "";
 		String consumer_secret = TwitterConstants.APISECRET;
 		String access_token_secret = TwitterConstants.TOKEN.getSecret();
-		signing_key = OAuth.percentEncode(consumer_secret) + "&"
+		signing_key = (mehtod.equals("POST") ? "" : OAuth
+				.percentEncode(consumer_secret) + "&")
 				+ OAuth.percentEncode(access_token_secret);
 		String signature = "";
 		try {
@@ -98,29 +94,6 @@ public class TwitterConstants {
 		} catch (InvalidKeyException e) {
 			e.printStackTrace();
 		}
-		String result = "";
-		Object[] keyses = mapKeyValue.keySet().toArray();
-		Arrays.sort(keyses);
-		for (Object key : keyses) {
-			result = result + key + "=\"" + mapKeyValue.get(key) + "\", ";
-		}
-		result = result.substring(0, result.length() - 2);
-		/*
-		 * stringRequestParams = "OAuth " + stringRequestParams + " ," +
-		 * "oauth_signature=\"" + signature + "\""; mapKeyValue.clear();
-		 * mapKeyValue.put(OAuth.percentEncode("OAuth oauth_signature"),
-		 * OAuth.percentEncode(signature));
-		 * mapKeyValue.put(OAuth.percentEncode("oauth_consumer_key"),
-		 * OAuth.percentEncode(oAuthConsumerKey));
-		 * mapKeyValue.put(OAuth.percentEncode("oauth_timestamp"),
-		 * OAuth.percentEncode("" + timeStamp));
-		 * mapKeyValue.put(OAuth.percentEncode("oauth_signature_method"),
-		 * OAuth.percentEncode(oauth_signature_method));
-		 * mapKeyValue.put(OAuth.percentEncode("oauth_nonce"),
-		 * OAuth.percentEncode(generateNonce()));
-		 * mapKeyValue.put(OAuth.percentEncode("oauth_version"),
-		 * OAuth.percentEncode(oauth_version));
-		 */
 		mapKeyValue.put(OAuth.percentEncode("oauth_signature"),
 				OAuth.percentEncode(signature));
 		return generateAuthorizationHeader((HashMap<String, String>) mapKeyValue);
@@ -210,4 +183,23 @@ public class TwitterConstants {
 
 		return DST.replace("253D", "3D");
 	}
+
+	public static String genNonce() {
+		Random gen = new Random(System.currentTimeMillis());
+		StringBuilder nonceBuilder = new StringBuilder("");
+		String base = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		int baseLength = base.length();
+
+		// Taking random word characters
+		for (int i = 0; i < 32; ++i) {
+			int position = gen.nextInt(baseLength);
+			nonceBuilder.append(base.charAt(position));
+		}
+
+		String nonce = Base64.encodeToString(
+				nonceBuilder.toString().getBytes(), Base64.NO_WRAP);
+
+		return nonce;
+	}
+
 }

@@ -1,6 +1,8 @@
 package com.example.twitterclient.fragments;
 
 import java.util.ArrayList;
+
+import org.apache.http.NameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.scribe.builder.ServiceBuilder;
@@ -8,6 +10,7 @@ import org.scribe.model.OAuthRequest;
 import org.scribe.model.Response;
 import org.scribe.model.Verb;
 import org.scribe.oauth.OAuthService;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.AsyncTask;
@@ -24,18 +27,25 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.android.volley.VolleyError;
+import com.android.volley.Request.Method;
+import com.android.volley.Response.ErrorListener;
+import com.android.volley.Response.Listener;
 import com.example.twitterclient.R;
+import com.example.twitterclient.activity.TwitterMessageActivity;
 import com.example.twitterclient.adapter.FriendsAdapter;
 import com.example.twitterclient.model.FrendsResult;
 import com.example.twitterclient.model.Friend;
+import com.example.twitterclient.utils.FollowersOAuthRequest;
 import com.example.twitterclient.utils.NetworkUtils;
 import com.example.twitterclient.utils.TwitterApi;
 import com.example.twitterclient.utils.TwitterConstants;
 import com.google.gson.Gson;
 
 public class FriendsFragment extends Fragment implements OnItemClickListener,
-		OnClickListener {
+		OnClickListener, Listener<JSONObject> {
 	private String KEY_CONTENT = getClass().getSimpleName();
 	private ListView mContactListView;
 	FriendsAdapter mFriendsAdapter;
@@ -75,9 +85,24 @@ public class FriendsFragment extends Fragment implements OnItemClickListener,
 		mSendMessage.setOnClickListener(this);
 
 		mProgressBar = (ProgressBar) v.findViewById(R.id.progress_friends);
-		LoadFriends loadFriends = new LoadFriends();
-		loadFriends.execute();
+		/*
+		 * LoadFriends loadFriends = new LoadFriends(); loadFriends.execute();
+		 */
+		mProgressBar.setVisibility(View.VISIBLE);
 
+		/*TwitterMessageActivity.mRequestQueue.add(new FollowersOAuthRequest(
+				Method.GET, TwitterConstants.FOLLOWERS_GET, this,
+				new ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError error) {
+						mProgressBar.setVisibility(View.GONE);
+						error.printStackTrace();
+						Toast.makeText(
+								getActivity(),
+								"Произошла ошибка при получении данных! Попробуйте позже!",
+								Toast.LENGTH_LONG).show();
+					}
+				}, new ArrayList<NameValuePair>()));*/
 		return v;
 	}
 
@@ -202,5 +227,20 @@ public class FriendsFragment extends Fragment implements OnItemClickListener,
 	public void onDetach() {
 		super.onDetach();
 		mCallerActivity = null;
+	}
+
+	@Override
+	public void onResponse(JSONObject response) {
+		mProgressBar.setVisibility(View.GONE);
+		Gson gson = new Gson();
+		FrendsResult friendes = gson.fromJson(response.toString(),
+				FrendsResult.class);
+		if (friendes != null && friendes.getUsers() != null) {
+
+			mContactListView.setVisibility(View.VISIBLE);
+			mFriendsAdapter = new FriendsAdapter(getActivity(),
+					friendes.getUsers());
+			mContactListView.setAdapter(mFriendsAdapter);
+		}
 	}
 }

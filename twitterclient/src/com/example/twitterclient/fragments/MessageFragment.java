@@ -1,7 +1,10 @@
 package com.example.twitterclient.fragments;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,6 +13,7 @@ import org.scribe.model.OAuthRequest;
 import org.scribe.model.Response;
 import org.scribe.model.Verb;
 import org.scribe.oauth.OAuthService;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -29,24 +33,30 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.android.volley.Request.Method;
+import com.android.volley.Response.ErrorListener;
+import com.android.volley.Response.Listener;
+import com.android.volley.VolleyError;
 import com.example.twitterclient.R;
 import com.example.twitterclient.activity.TwitterMessageActivity;
 import com.example.twitterclient.adapter.MessageAdapter;
 import com.example.twitterclient.model.Message;
+import com.example.twitterclient.utils.SendMessageOAuthRequest;
 import com.example.twitterclient.utils.SortMessage;
 import com.example.twitterclient.utils.TwitterApi;
 import com.example.twitterclient.utils.TwitterConstants;
 import com.google.gson.Gson;
 
 public class MessageFragment extends Fragment implements
-		TwitterMessageActivity.CallbackFragmentManager, OnItemLongClickListener,
-		OnItemClickListener {
+		TwitterMessageActivity.CallbackFragmentManager,
+		OnItemLongClickListener, OnItemClickListener {
 	private String KEY_CONTENT = getClass().getSimpleName();
 	private ListView mListViewMessage;
 	MessageAdapter mMessageAdapter;
@@ -54,6 +64,7 @@ public class MessageFragment extends Fragment implements
 	LoadMessages loadMessages;
 	TextView mIsEmpty;
 	private ActionMode actionMode;
+	SendMessageListener sendMessageListener = new SendMessageListener();
 
 	public static MessageFragment newInstance(String content) {
 		MessageFragment fragment = new MessageFragment();
@@ -82,8 +93,35 @@ public class MessageFragment extends Fragment implements
 		mIsEmpty = (TextView) v.findViewById(R.id.isempty);
 		mIsEmpty.setText(getActivity().getResources().getString(
 				R.string.empty_user));
+		HashMap<String, String> map = new HashMap<String, String>();
+		
+
+		map.put("text", "Hello!!!");
+		map.put("user_id", "22754833");
+		TwitterMessageActivity.mRequestQueue.add(new SendMessageOAuthRequest(
+				Method.POST, null, sendMessageListener, new ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError error) {
+
+						error.printStackTrace();
+					}
+				}, map));
 
 		return v;
+	}
+
+	class SendMessageListener implements Listener<JSONObject> {// Listener<JSONObject>
+
+		@Override
+		public void onResponse(JSONObject response) {
+			Gson gson = new Gson();
+			Message friendes = gson
+					.fromJson(response.toString(), Message.class);
+			if (friendes != null) {
+
+			}
+
+		}
 	}
 
 	@Override
