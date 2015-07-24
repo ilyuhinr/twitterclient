@@ -14,6 +14,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.scribe.model.Token;
+import org.scribe.utils.OAuthEncoder;
 
 import android.util.Base64;
 
@@ -45,18 +46,18 @@ public class TwitterConstants {
 		String oauth_token = TwitterConstants.TOKEN.getToken();
 		String oauth_version = "1.0";
 		Map<String, String> mapKeyValue = new HashMap<String, String>();
-		mapKeyValue.put(OAuth.percentEncode("oauth_consumer_key"),
-				OAuth.percentEncode(oAuthConsumerKey));
-		mapKeyValue.put(OAuth.percentEncode("oauth_nonce"),
-				OAuth.percentEncode(stringNonce));
-		mapKeyValue.put(OAuth.percentEncode("oauth_signature_method"),
-				OAuth.percentEncode(oauth_signature_method));
-		mapKeyValue.put(OAuth.percentEncode("oauth_timestamp"),
-				OAuth.percentEncode("" + timeStamp));
-		mapKeyValue.put(OAuth.percentEncode("oauth_token"),
-				OAuth.percentEncode(oauth_token));
-		mapKeyValue.put(OAuth.percentEncode("oauth_version"),
-				OAuth.percentEncode(oauth_version));
+		mapKeyValue.put(OAuthEncoder.encode("oauth_consumer_key"),
+				OAuthEncoder.encode(oAuthConsumerKey));
+		mapKeyValue.put(OAuthEncoder.encode("oauth_nonce"),
+				OAuthEncoder.encode(stringNonce));
+		mapKeyValue.put(OAuthEncoder.encode("oauth_signature_method"),
+				OAuthEncoder.encode(oauth_signature_method));
+		mapKeyValue.put(OAuthEncoder.encode("oauth_timestamp"),
+				OAuthEncoder.encode("" + timeStamp));
+		mapKeyValue.put(OAuthEncoder.encode("oauth_token"),
+				OAuthEncoder.encode(oauth_token));
+		mapKeyValue.put(OAuthEncoder.encode("oauth_version"),
+				OAuthEncoder.encode(oauth_version));
 
 		String stringRequestParams = "";
 
@@ -71,16 +72,14 @@ public class TwitterConstants {
 		String outputString = "";
 		outputString = mehtod;
 		outputString = outputString + "&";
-		outputString = outputString + OAuth.percentEncode(request_base_url);
+		outputString = outputString + OAuthEncoder.encode(request_base_url);
 		outputString = outputString + "&";
-		outputString = outputString + OAuth.percentEncode(stringRequestParams);
+		outputString = outputString + OAuthEncoder.encode(stringRequestParams);
 		final String stringSignatureBase = outputString;
 		String signing_key = "";
 		String consumer_secret = TwitterConstants.APISECRET;
 		String access_token_secret = TwitterConstants.TOKEN.getSecret();
-		signing_key = (mehtod.equals("POST") ? "" : OAuth
-				.percentEncode(consumer_secret) + "&")
-				+ OAuth.percentEncode(access_token_secret);
+		signing_key = consumer_secret + "&" + access_token_secret;
 		String signature = "";
 		try {
 			signature = Base64.encodeToString(
@@ -94,11 +93,58 @@ public class TwitterConstants {
 		} catch (InvalidKeyException e) {
 			e.printStackTrace();
 		}
-		mapKeyValue.put(OAuth.percentEncode("oauth_signature"),
-				OAuth.percentEncode(signature));
+
+		/*
+		 * String[] parameters = { OAuthEncoder.encode("oauth_consumer_key") +
+		 * "=" + OAuthEncoder.encode(oAuthConsumerKey) + "&",
+		 * OAuthEncoder.encode("oauth_nonce") + "=" +
+		 * OAuthEncoder.encode(genNonce()) + "&",
+		 * OAuthEncoder.encode("oauth_signature_method") + "=" +
+		 * OAuthEncoder.encode("HMAC-SHA1") + "&",
+		 * OAuthEncoder.encode("oauth_timestamp") + "=" +
+		 * OAuthEncoder.encode(timeStamp.toString()) + "&",
+		 * OAuthEncoder.encode("oauth_token") + "=" +
+		 * OAuthEncoder.encode(oauth_token) + "&",
+		 * OAuthEncoder.encode("oauth_version") + "=" +
+		 * OAuthEncoder.encode("1.0") +"&", OAuthEncoder.encode( "track"
+		 * )+"="+OAuth.percentEncode (TRACK) };
+		 * 
+		 * String parameters_string = ""; for (int i = 0; i < parameters.length;
+		 * i++) { parameters_string += parameters[i]; } String consumer_secret =
+		 * TwitterConstants.APISECRET; String access_token_secret =
+		 * TwitterConstants.TOKEN.getSecret(); String sign = mehtod + "&" +
+		 * OAuthEncoder.encode(url) + "&" +
+		 * OAuthEncoder.encode(parameters_string); String key = consumer_secret
+		 * + "&" + access_token_secret; try {
+		 * mapKeyValue.put(OAuthEncoder.encode("oauth_signature"),
+		 * OAuthEncoder.encode(Base64.encodeToString( calculateRFC2104HMAC(sign,
+		 * key), Base64.NO_WRAP))); } catch (InvalidKeyException e) { // TODO
+		 * Auto-generated catch block e.printStackTrace(); } catch
+		 * (SignatureException e) { // TODO Auto-generated catch block
+		 * e.printStackTrace(); } catch (NoSuchAlgorithmException e) { // TODO
+		 * Auto-generated catch block e.printStackTrace(); }
+		 */
 		return generateAuthorizationHeader((HashMap<String, String>) mapKeyValue);
 
 	}
+
+	private static String Nonce() {
+		byte[] r = new byte[32];
+		Random rand = new Random();
+		rand.nextBytes(r);
+		String s = Base64.encodeToString(r, Base64.NO_WRAP);
+		return s;
+	}
+
+	/*
+	 * private static String calculateRFC2104HMAC(String data, String key) {
+	 * String result = ""; try { String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+	 * SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(),
+	 * HMAC_SHA1_ALGORITHM); Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+	 * mac.init(signingKey); byte[] rawHmac = mac.doFinal(data.getBytes());
+	 * result = Base64.encodeToString(rawHmac, Base64.NO_WRAP); } catch
+	 * (Exception e) { e.printStackTrace(); } return result; }
+	 */
 
 	public static int randInt(int min, int max) {
 		Random rand = new Random();
@@ -116,69 +162,56 @@ public class TwitterConstants {
 		return mac.doFinal(data.getBytes());
 	}
 
-	private static String generateNonce() {
-		try {
-			byte[] nonceByteArray = new byte[32];
-			String nonceString = Base64.encodeToString(nonceByteArray,
-					Base64.NO_WRAP);
-			return nonceString.replaceAll("[^\\p{L}\\p{Nd}]+", "");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
 	private static String generateAuthorizationHeader(
 			HashMap<String, String> param) {
 		String DST = "";
 		DST = DST + "OAuth ";
-
-		DST = DST + OAuth.percentEncode("oauth_consumer_key");
+		DST = DST + OAuthEncoder.encode("oauth_signature");
 		DST = DST + "=";
 		DST = DST + "\"";
-		DST = DST + OAuth.percentEncode(param.get("oauth_consumer_key"));
+		DST = DST + OAuthEncoder.encode(param.get("oauth_signature"));
 		DST = DST + "\"";
 		DST = DST + ", ";
 
-		DST = DST + OAuth.percentEncode("oauth_nonce");
+		DST = DST + OAuthEncoder.encode("oauth_version");
 		DST = DST + "=";
 		DST = DST + "\"";
-		DST = DST + OAuth.percentEncode(param.get("oauth_nonce"));
+		DST = DST + OAuthEncoder.encode(param.get("oauth_version"));
 		DST = DST + "\"";
 		DST = DST + ", ";
 
-		DST = DST + OAuth.percentEncode("oauth_signature");
+		DST = DST + OAuthEncoder.encode("oauth_nonce");
 		DST = DST + "=";
 		DST = DST + "\"";
-		DST = DST + OAuth.percentEncode(param.get("oauth_signature"));
+		DST = DST + OAuthEncoder.encode(param.get("oauth_nonce"));
 		DST = DST + "\"";
 		DST = DST + ", ";
 
-		DST = DST + OAuth.percentEncode("oauth_signature_method");
+		DST = DST + OAuthEncoder.encode("oauth_signature_method");
 		DST = DST + "=";
 		DST = DST + "\"";
-		DST = DST + OAuth.percentEncode(param.get("oauth_signature_method"));
+		DST = DST + OAuthEncoder.encode(param.get("oauth_signature_method"));
 		DST = DST + "\"";
 		DST = DST + ", ";
 
-		DST = DST + OAuth.percentEncode("oauth_timestamp");
+		DST = DST + OAuthEncoder.encode("oauth_consumer_key");
 		DST = DST + "=";
 		DST = DST + "\"";
-		DST = DST + OAuth.percentEncode("" + param.get("oauth_timestamp"));
+		DST = DST + OAuthEncoder.encode(param.get("oauth_consumer_key"));
 		DST = DST + "\"";
 		DST = DST + ", ";
 
-		DST = DST + OAuth.percentEncode("oauth_token");
+		DST = DST + OAuthEncoder.encode("oauth_timestamp");
 		DST = DST + "=";
 		DST = DST + "\"";
-		DST = DST + OAuth.percentEncode(param.get("oauth_token"));
+		DST = DST + "" + OAuthEncoder.encode(param.get("oauth_timestamp"));
 		DST = DST + "\"";
 		DST = DST + ", ";
 
-		DST = DST + OAuth.percentEncode("oauth_version");
+		DST = DST + OAuthEncoder.encode("oauth_token");
 		DST = DST + "=";
 		DST = DST + "\"";
-		DST = DST + OAuth.percentEncode(param.get("oauth_version"));
+		DST = DST + OAuthEncoder.encode(param.get("oauth_token"));
 		DST = DST + "\"";
 
 		return DST.replace("253D", "3D");

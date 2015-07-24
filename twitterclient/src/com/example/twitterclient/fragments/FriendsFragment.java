@@ -90,7 +90,7 @@ public class FriendsFragment extends Fragment implements OnItemClickListener,
 		 */
 		mProgressBar.setVisibility(View.VISIBLE);
 
-		/*TwitterMessageActivity.mRequestQueue.add(new FollowersOAuthRequest(
+		TwitterMessageActivity.mRequestQueue.add(new FollowersOAuthRequest(
 				Method.GET, TwitterConstants.FOLLOWERS_GET, this,
 				new ErrorListener() {
 					@Override
@@ -102,7 +102,7 @@ public class FriendsFragment extends Fragment implements OnItemClickListener,
 								"Произошла ошибка при получении данных! Попробуйте позже!",
 								Toast.LENGTH_LONG).show();
 					}
-				}, new ArrayList<NameValuePair>()));*/
+				}, new ArrayList<NameValuePair>()));
 		return v;
 	}
 
