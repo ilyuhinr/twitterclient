@@ -1,10 +1,10 @@
 package com.example.twitterclient.fragments;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
+import org.apache.http.NameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,7 +48,8 @@ import com.example.twitterclient.R;
 import com.example.twitterclient.activity.TwitterMessageActivity;
 import com.example.twitterclient.adapter.MessageAdapter;
 import com.example.twitterclient.model.Message;
-import com.example.twitterclient.utils.SendMessageOAuthRequest;
+import com.example.twitterclient.request.MessageOAuthRequest;
+import com.example.twitterclient.request.SendMessageOAuthRequest;
 import com.example.twitterclient.utils.SortMessage;
 import com.example.twitterclient.utils.TwitterApi;
 import com.example.twitterclient.utils.TwitterConstants;
@@ -64,7 +65,9 @@ public class MessageFragment extends Fragment implements
 	LoadMessages loadMessages;
 	TextView mIsEmpty;
 	private ActionMode actionMode;
+	String currentFollowerId;
 	SendMessageListener sendMessageListener = new SendMessageListener();
+	ArrayList<Message> messages;
 
 	public static MessageFragment newInstance(String content) {
 		MessageFragment fragment = new MessageFragment();
@@ -93,35 +96,7 @@ public class MessageFragment extends Fragment implements
 		mIsEmpty = (TextView) v.findViewById(R.id.isempty);
 		mIsEmpty.setText(getActivity().getResources().getString(
 				R.string.empty_user));
-		HashMap<String, String> map = new HashMap<String, String>();
-		
-
-		map.put("text", "Hello!!!");
-		map.put("user_id", "22754833");
-		TwitterMessageActivity.mRequestQueue.add(new SendMessageOAuthRequest(
-				Method.POST, null, sendMessageListener, new ErrorListener() {
-					@Override
-					public void onErrorResponse(VolleyError error) {
-
-						error.printStackTrace();
-					}
-				}, map));
-
 		return v;
-	}
-
-	class SendMessageListener implements Listener<JSONObject> {// Listener<JSONObject>
-
-		@Override
-		public void onResponse(JSONObject response) {
-			Gson gson = new Gson();
-			Message friendes = gson
-					.fromJson(response.toString(), Message.class);
-			if (friendes != null) {
-
-			}
-
-		}
 	}
 
 	@Override
@@ -138,22 +113,47 @@ public class MessageFragment extends Fragment implements
 
 	@Override
 	public void enterFollower(String idFollower, String nameFollower) {
+		currentFollowerId = idFollower;
 		if (mMessageAdapter != null && mMessageAdapter.getCount() > 0)
 			mMessageAdapter.removeAllMessage();
-		if (loadMessages != null
-				&& loadMessages.getStatus().equals(AsyncTask.Status.RUNNING)) {
-			loadMessages.cancel(true);
-		}
-		loadMessages = new LoadMessages();
-		loadMessages.execute(idFollower);
+		getActivity().setProgressBarIndeterminateVisibility(true);
+		ArrayList<NameValuePair> param = new ArrayList<NameValuePair>();
+		TwitterMessageActivity.mRequestQueue.add(new MessageOAuthRequest(
+				Method.GET, TwitterConstants.DIRECT_MESSAGES_GET,
+				new MessagesListener(TwitterConstants.DIRECT_MESSAGES_GET),
+				new ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError error) {
+						getActivity().setProgressBarIndeterminateVisibility(
+								false);
+						error.printStackTrace();
+						Toast.makeText(
+								getActivity(),
+								"Произошла ошибка при получении данных! Попробуйте позже!",
+								Toast.LENGTH_LONG).show();
+					}
+				}, param));
+
 		mIsEmpty.setText("Загрузка сообщений от " + nameFollower + "...");
 	}
 
 	@Override
 	public void newMessage(String message, String idFollower,
 			String nameFollower) {
-		SendMessage sendMessage = new SendMessage();
-		sendMessage.execute(message, idFollower, nameFollower);
+		HashMap<String, String> params = new HashMap<String, String>();
+		params.put("text", message);
+		params.put("user_id", idFollower);
+		TwitterMessageActivity.mRequestQueue.add(new SendMessageOAuthRequest(
+				Method.POST, TwitterConstants.NEW_MESSAGE_POST,
+				sendMessageListener, new ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError error) {
+						Toast.makeText(getActivity(),
+								"Произошла ошибка при доставке сообщения!",
+								Toast.LENGTH_LONG).show();
+						error.printStackTrace();
+					}
+				}, params));
 	}
 
 	private class LoadMessages extends
@@ -427,47 +427,102 @@ public class MessageFragment extends Fragment implements
 		}
 	}
 
-	private class SendMessage extends AsyncTask<String, Void, Message> {
+	class SendMessageListener implements Listener<JSONObject> {
 
 		@Override
-		protected Message doInBackground(String... params) {
-			Message msg = null;
-			OAuthService service = new ServiceBuilder()
-					.provider(TwitterApi.class).apiKey(TwitterConstants.APIKEY)
-					.callback(TwitterConstants.CALLBACK_URL)
-					.apiSecret(TwitterConstants.APISECRET).build();
-			OAuthRequest request = new OAuthRequest(Verb.POST,
-					TwitterConstants.NEW_MESSAGE_POST);
-			request.addBodyParameter("user_id", params[1]);
-			request.addBodyParameter("text", params[0]);
-			request.addHeader("Content-Type",
-					"application/x-www-form-urlencoded");
-			service.signRequest(TwitterConstants.TOKEN, request);
-			Response response = request.send();
-			try {
-				JSONObject json = new JSONObject(response.getBody());
-				Gson gson = new Gson();
-				msg = gson.fromJson(json.toString(), Message.class);
-				msg.setSent(true);
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-			return msg;
-		}
-
-		@Override
-		protected void onPostExecute(Message message) {
+		public void onResponse(JSONObject response) {
+			Gson gson = new Gson();
+			Message message = gson.fromJson(response.toString(), Message.class);
 			if (message != null) {
 				mMessageAdapter.addMessage(message);
 				Toast.makeText(getActivity(),
 						getActivity().getString(R.string.success_send_message),
 						Toast.LENGTH_LONG).show();
-			} else {
-				Toast.makeText(getActivity(),
-						getActivity().getString(R.string.error_send_message),
-						Toast.LENGTH_LONG).show();
 			}
-			super.onPostExecute(message);
+
 		}
 	}
+
+	class MessagesListener implements Listener<JSONArray> {
+		String url;
+
+		public MessagesListener(String url) {
+			this.url = url;
+		}
+
+		@Override
+		public void onResponse(JSONArray response) {
+			if (messages == null)
+				messages = new ArrayList<Message>();
+			Gson gson = new Gson();
+			for (int i = 0; i < response.length(); i++) {
+				JSONObject jsonObject = null;
+				try {
+					jsonObject = (JSONObject) response.get(i);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if (jsonObject != null) {
+					Message message = gson.fromJson(jsonObject.toString(),
+							Message.class);
+					if (url.equalsIgnoreCase(TwitterConstants.DIRECT_MESSAGES_GET)) {
+						message.setSent(false);
+						if (!message.getSender_id().equals(currentFollowerId)) {
+							continue;
+						}
+					} else {
+						message.setSent(true);
+						if (!message.getRecipient_id()
+								.equals(currentFollowerId)) {
+							continue;
+						}
+					}
+
+					messages.add(message);
+
+				}
+
+			}
+			if (url.equalsIgnoreCase(TwitterConstants.DIRECT_MESSAGES_GET)) {
+				ArrayList<NameValuePair> param = new ArrayList<NameValuePair>();
+				TwitterMessageActivity.mRequestQueue
+						.add(new MessageOAuthRequest(
+								Method.GET,
+								TwitterConstants.DIRECT_MESSAGES_SENT_GET,
+								new MessagesListener(
+										TwitterConstants.DIRECT_MESSAGES_SENT_GET),
+								new ErrorListener() {
+									@Override
+									public void onErrorResponse(
+											VolleyError error) {
+										getActivity()
+												.setProgressBarIndeterminateVisibility(
+														false);
+										error.printStackTrace();
+										Toast.makeText(
+												getActivity(),
+												"Произошла ошибка при получении данных! Попробуйте позже!",
+												Toast.LENGTH_LONG).show();
+									}
+								}, param));
+			} else {
+				Collections.sort(messages, new SortMessage());
+				SparseBooleanArray array = new SparseBooleanArray();
+				for (int i = 0; i < messages.size(); i++) {
+					array.put(i, false);
+				}
+				mMessageAdapter = new MessageAdapter(getActivity(), 0,
+						messages, array);
+				mListViewMessage.setAdapter(mMessageAdapter);
+				getActivity().setProgressBarIndeterminateVisibility(false);
+				mIsEmpty.setText("");
+				if (mMessageAdapter.getCount() == 0) {
+					mIsEmpty.setText("Нет сообщений");
+				}
+				getActivity().setProgressBarIndeterminateVisibility(false);
+			}
+		}
+	}
+
 }

@@ -38,8 +38,6 @@ public class TwitterMessageActivity extends SherlockFragmentActivity implements
 	CallbackFragmentManager mCallbackFragmentManager = null;
 	ViewPager mViewPager;
 	public static RequestQueue mRequestQueue;
-	private TweetJsonListener mDownListener = new TweetJsonListener();
-	private static final String TOKEN_URL = "https://api.twitter.com/oauth2/token";
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -76,34 +74,7 @@ public class TwitterMessageActivity extends SherlockFragmentActivity implements
 			}
 		});
 
-		// params.add(new BasicNameValuePair("q", query));
 		mRequestQueue = Volley.newRequestQueue(this);
-		/*
-		 * StringRequest request = new TokenRequest(Method.POST, TOKEN_URL, new
-		 * Listener<String>() {
-		 * 
-		 * @Override public void onResponse(String response) { try { JSONObject
-		 * object = new JSONObject(response);
-		 * 
-		 * TwitterConstants.ACCESS_TOKEN_VOLLEY = object
-		 * .optString("access_token"); List<NameValuePair> params = new
-		 * ArrayList<NameValuePair>();
-		 * 
-		 * params.add(new BasicNameValuePair("status", String
-		 * .valueOf("Hello World!!!")));
-		 * 
-		 * mRequestQueue.add(new FollowersOAuthRequest(Method.GET, null,
-		 * mTwetersListener, new ErrorListener() {
-		 * 
-		 * @Override public void onErrorResponse( VolleyError error) {
-		 * 
-		 * error.printStackTrace(); } }, params)); } catch (JSONException e) {
-		 * e.printStackTrace(); } } }, new ErrorListener() {
-		 * 
-		 * @Override public void onErrorResponse(VolleyError error) {
-		 * error.printStackTrace(); } }); mRequestQueue.add(request);
-		 */
-
 	}
 
 	public class TweetJsonListener implements Listener<JSONArray> {// Listener<JSONObject>

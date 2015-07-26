@@ -3,17 +3,10 @@ package com.example.twitterclient.fragments;
 import java.util.ArrayList;
 
 import org.apache.http.NameValuePair;
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.scribe.builder.ServiceBuilder;
-import org.scribe.model.OAuthRequest;
-import org.scribe.model.Response;
-import org.scribe.model.Verb;
-import org.scribe.oauth.OAuthService;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -29,18 +22,16 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.android.volley.VolleyError;
 import com.android.volley.Request.Method;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
+import com.android.volley.VolleyError;
 import com.example.twitterclient.R;
 import com.example.twitterclient.activity.TwitterMessageActivity;
 import com.example.twitterclient.adapter.FriendsAdapter;
 import com.example.twitterclient.model.FrendsResult;
-import com.example.twitterclient.model.Friend;
-import com.example.twitterclient.utils.FollowersOAuthRequest;
+import com.example.twitterclient.request.FollowersOAuthRequest;
 import com.example.twitterclient.utils.NetworkUtils;
-import com.example.twitterclient.utils.TwitterApi;
 import com.example.twitterclient.utils.TwitterConstants;
 import com.google.gson.Gson;
 
@@ -85,9 +76,6 @@ public class FriendsFragment extends Fragment implements OnItemClickListener,
 		mSendMessage.setOnClickListener(this);
 
 		mProgressBar = (ProgressBar) v.findViewById(R.id.progress_friends);
-		/*
-		 * LoadFriends loadFriends = new LoadFriends(); loadFriends.execute();
-		 */
 		mProgressBar.setVisibility(View.VISIBLE);
 
 		TwitterMessageActivity.mRequestQueue.add(new FollowersOAuthRequest(
@@ -112,49 +100,6 @@ public class FriendsFragment extends Fragment implements OnItemClickListener,
 
 	}
 
-	private class LoadFriends extends AsyncTask<Void, Void, ArrayList<Friend>> {
-		ArrayList<Friend> friends = new ArrayList<Friend>();
-
-		@Override
-		protected void onPreExecute() {
-			mProgressBar.setVisibility(View.VISIBLE);
-			mContactListView.setVisibility(View.GONE);
-			super.onPreExecute();
-		}
-
-		@Override
-		protected ArrayList<Friend> doInBackground(Void... params) {
-
-			OAuthService service = new ServiceBuilder()
-					.provider(TwitterApi.class).apiKey(TwitterConstants.APIKEY)
-					.callback(TwitterConstants.CALLBACK_URL)
-					.apiSecret(TwitterConstants.APISECRET).build();
-
-			OAuthRequest req = new OAuthRequest(Verb.GET,
-					TwitterConstants.FOLLOWERS_GET);
-			service.signRequest(TwitterConstants.TOKEN, req);
-			Response response = req.send();
-			try {
-				JSONObject json = new JSONObject(response.getBody());
-				Gson gson = new Gson();
-				FrendsResult frendsResult = gson.fromJson(json.toString(),
-						FrendsResult.class);
-				friends = frendsResult.getUsers();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-			return friends;
-		}
-
-		@Override
-		protected void onPostExecute(ArrayList<Friend> result) {
-			mProgressBar.setVisibility(View.GONE);
-			mContactListView.setVisibility(View.VISIBLE);
-			mFriendsAdapter = new FriendsAdapter(getActivity(), result);
-			mContactListView.setAdapter(mFriendsAdapter);
-			super.onPostExecute(result);
-		}
-	}
 
 	@Override
 	public void onItemClick(AdapterView<?> parent, View view, int position,

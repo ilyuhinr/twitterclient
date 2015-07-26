@@ -1,7 +1,5 @@
 package com.example.twitterclient.utils;
 
-import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -93,58 +91,9 @@ public class TwitterConstants {
 		} catch (InvalidKeyException e) {
 			e.printStackTrace();
 		}
-
-		/*
-		 * String[] parameters = { OAuthEncoder.encode("oauth_consumer_key") +
-		 * "=" + OAuthEncoder.encode(oAuthConsumerKey) + "&",
-		 * OAuthEncoder.encode("oauth_nonce") + "=" +
-		 * OAuthEncoder.encode(genNonce()) + "&",
-		 * OAuthEncoder.encode("oauth_signature_method") + "=" +
-		 * OAuthEncoder.encode("HMAC-SHA1") + "&",
-		 * OAuthEncoder.encode("oauth_timestamp") + "=" +
-		 * OAuthEncoder.encode(timeStamp.toString()) + "&",
-		 * OAuthEncoder.encode("oauth_token") + "=" +
-		 * OAuthEncoder.encode(oauth_token) + "&",
-		 * OAuthEncoder.encode("oauth_version") + "=" +
-		 * OAuthEncoder.encode("1.0") +"&", OAuthEncoder.encode( "track"
-		 * )+"="+OAuth.percentEncode (TRACK) };
-		 * 
-		 * String parameters_string = ""; for (int i = 0; i < parameters.length;
-		 * i++) { parameters_string += parameters[i]; } String consumer_secret =
-		 * TwitterConstants.APISECRET; String access_token_secret =
-		 * TwitterConstants.TOKEN.getSecret(); String sign = mehtod + "&" +
-		 * OAuthEncoder.encode(url) + "&" +
-		 * OAuthEncoder.encode(parameters_string); String key = consumer_secret
-		 * + "&" + access_token_secret; try {
-		 * mapKeyValue.put(OAuthEncoder.encode("oauth_signature"),
-		 * OAuthEncoder.encode(Base64.encodeToString( calculateRFC2104HMAC(sign,
-		 * key), Base64.NO_WRAP))); } catch (InvalidKeyException e) { // TODO
-		 * Auto-generated catch block e.printStackTrace(); } catch
-		 * (SignatureException e) { // TODO Auto-generated catch block
-		 * e.printStackTrace(); } catch (NoSuchAlgorithmException e) { // TODO
-		 * Auto-generated catch block e.printStackTrace(); }
-		 */
 		return generateAuthorizationHeader((HashMap<String, String>) mapKeyValue);
 
 	}
-
-	private static String Nonce() {
-		byte[] r = new byte[32];
-		Random rand = new Random();
-		rand.nextBytes(r);
-		String s = Base64.encodeToString(r, Base64.NO_WRAP);
-		return s;
-	}
-
-	/*
-	 * private static String calculateRFC2104HMAC(String data, String key) {
-	 * String result = ""; try { String HMAC_SHA1_ALGORITHM = "HmacSHA1";
-	 * SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(),
-	 * HMAC_SHA1_ALGORITHM); Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
-	 * mac.init(signingKey); byte[] rawHmac = mac.doFinal(data.getBytes());
-	 * result = Base64.encodeToString(rawHmac, Base64.NO_WRAP); } catch
-	 * (Exception e) { e.printStackTrace(); } return result; }
-	 */
 
 	public static int randInt(int min, int max) {
 		Random rand = new Random();
@@ -164,57 +113,57 @@ public class TwitterConstants {
 
 	private static String generateAuthorizationHeader(
 			HashMap<String, String> param) {
-		String DST = "";
-		DST = DST + "OAuth ";
-		DST = DST + OAuthEncoder.encode("oauth_signature");
-		DST = DST + "=";
-		DST = DST + "\"";
-		DST = DST + OAuthEncoder.encode(param.get("oauth_signature"));
-		DST = DST + "\"";
-		DST = DST + ", ";
+		String resultHeader = "";
+		resultHeader = resultHeader + "OAuth ";
+		resultHeader = resultHeader + OAuthEncoder.encode("oauth_signature");
+		resultHeader = resultHeader + "=";
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + OAuthEncoder.encode(param.get("oauth_signature"));
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + ", ";
 
-		DST = DST + OAuthEncoder.encode("oauth_version");
-		DST = DST + "=";
-		DST = DST + "\"";
-		DST = DST + OAuthEncoder.encode(param.get("oauth_version"));
-		DST = DST + "\"";
-		DST = DST + ", ";
+		resultHeader = resultHeader + OAuthEncoder.encode("oauth_version");
+		resultHeader = resultHeader + "=";
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + OAuthEncoder.encode(param.get("oauth_version"));
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + ", ";
 
-		DST = DST + OAuthEncoder.encode("oauth_nonce");
-		DST = DST + "=";
-		DST = DST + "\"";
-		DST = DST + OAuthEncoder.encode(param.get("oauth_nonce"));
-		DST = DST + "\"";
-		DST = DST + ", ";
+		resultHeader = resultHeader + OAuthEncoder.encode("oauth_nonce");
+		resultHeader = resultHeader + "=";
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + OAuthEncoder.encode(param.get("oauth_nonce"));
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + ", ";
 
-		DST = DST + OAuthEncoder.encode("oauth_signature_method");
-		DST = DST + "=";
-		DST = DST + "\"";
-		DST = DST + OAuthEncoder.encode(param.get("oauth_signature_method"));
-		DST = DST + "\"";
-		DST = DST + ", ";
+		resultHeader = resultHeader + OAuthEncoder.encode("oauth_signature_method");
+		resultHeader = resultHeader + "=";
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + OAuthEncoder.encode(param.get("oauth_signature_method"));
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + ", ";
 
-		DST = DST + OAuthEncoder.encode("oauth_consumer_key");
-		DST = DST + "=";
-		DST = DST + "\"";
-		DST = DST + OAuthEncoder.encode(param.get("oauth_consumer_key"));
-		DST = DST + "\"";
-		DST = DST + ", ";
+		resultHeader = resultHeader + OAuthEncoder.encode("oauth_consumer_key");
+		resultHeader = resultHeader + "=";
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + OAuthEncoder.encode(param.get("oauth_consumer_key"));
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + ", ";
 
-		DST = DST + OAuthEncoder.encode("oauth_timestamp");
-		DST = DST + "=";
-		DST = DST + "\"";
-		DST = DST + "" + OAuthEncoder.encode(param.get("oauth_timestamp"));
-		DST = DST + "\"";
-		DST = DST + ", ";
+		resultHeader = resultHeader + OAuthEncoder.encode("oauth_timestamp");
+		resultHeader = resultHeader + "=";
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + "" + OAuthEncoder.encode(param.get("oauth_timestamp"));
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + ", ";
 
-		DST = DST + OAuthEncoder.encode("oauth_token");
-		DST = DST + "=";
-		DST = DST + "\"";
-		DST = DST + OAuthEncoder.encode(param.get("oauth_token"));
-		DST = DST + "\"";
+		resultHeader = resultHeader + OAuthEncoder.encode("oauth_token");
+		resultHeader = resultHeader + "=";
+		resultHeader = resultHeader + "\"";
+		resultHeader = resultHeader + OAuthEncoder.encode(param.get("oauth_token"));
+		resultHeader = resultHeader + "\"";
 
-		return DST.replace("253D", "3D");
+		return resultHeader.replace("253D", "3D");
 	}
 
 	public static String genNonce() {
@@ -231,7 +180,6 @@ public class TwitterConstants {
 
 		String nonce = Base64.encodeToString(
 				nonceBuilder.toString().getBytes(), Base64.NO_WRAP);
-
 		return nonce;
 	}
 

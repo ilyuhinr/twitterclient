@@ -17,14 +17,12 @@ public class SortMessage implements Comparator<Message> {
 		try {
 			dateLeft = sf.parse(left.getCreated_at());
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		Date dateRight = null;
 		try {
 			dateRight = sf.parse(right.getCreated_at());
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (dateLeft != null && dateRight != null) {

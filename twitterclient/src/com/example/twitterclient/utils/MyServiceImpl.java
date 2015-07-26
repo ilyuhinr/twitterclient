@@ -12,14 +12,14 @@ import org.scribe.model.Verifier;
 import org.scribe.oauth.OAuth10aServiceImpl;
 import org.scribe.utils.MapUtils;
 
-public class EtsyServiceImpl extends OAuth10aServiceImpl {
+public class MyServiceImpl extends OAuth10aServiceImpl {
 	private OAuthConfig config;
 	private DefaultApi10a api;
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public EtsyServiceImpl(DefaultApi10a api, OAuthConfig config) {
+	public MyServiceImpl(DefaultApi10a api, OAuthConfig config) {
 		super(api, config);
 		this.api = api;
 		this.config = config;
